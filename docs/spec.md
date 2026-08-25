@@ -40,9 +40,10 @@ autenticación, despliegue. Nada se persiste: el token entra por POST, se proces
 | El SDK exige `php: ^8.5`; este proyecto declara `php: ^8.3` | Hay que subir el `require.php` del proyecto a `^8.5`. El binario local ya es 8.5.8. |
 | `Illuminate\Contracts\Cache\Repository extends Psr\SimpleCache\CacheInterface` | El caché PSR-16 que pide el SDK es `Cache::store()` a secas. El README de googlepay dice `->getStore()`, que devuelve el *store* y **no** es PSR-16 — no copiar eso. |
 | El SDK no empaqueta el Apple Root CA G3: lo descarga de `apple.com` y lo cachea con el TTL del `Cache-Control` | Sin caché configurado, cada instancia de `ApplePay` sale a la red. La app debe pasar `Cache::store()` siempre, y eso mismo se vuelve algo observable en la pantalla de configuración. |
-| `ApplePayTokenGeneratorMock` firma con una cadena sintética, no con la de Apple | En la pantalla de mocks es **obligatorio** pasar `rootCertificate: ApplePayTokenGeneratorMock::rootCertificate()`. Si no, el token se rechaza antes de descifrarse. Es la trampa nº1 del SDK y la app tiene que dejarla evidente, no esconderla. |
+| `ApplePayTokenGeneratorMock` firma con una cadena sintética, no con la de Apple, y el root CA **no se puede configurar**: el SDK siempre lo descarga | En la pantalla de mocks hay que responder esa descarga con la raíz sintética: `httpClient: ApplePayClientMock::syntheticRootCertificate()`. Sin eso el token se rechaza antes de descifrarse. Es la trampa nº1 del SDK y la app tiene que dejarla evidente, no esconderla. |
+| La cadena sintética se regenera **en cada proceso PHP**, pero un root cacheado sobrevive entre peticiones | La pantalla de mocks corre con `cache: null`. Si no, la raíz que cachea una petición rechaza el token de la siguiente con `Intermediate CA certificate is not signed by the Apple Root CA`. En una suite de tests no se ve, porque todo corre en un proceso. |
 | `validateMerchant()` lanza `InvalidSettingsException::missingMerchantCertificate()` si faltan `certPath`/`certKeyPath` | Esa ruta necesita el Merchant Identity Certificate, que es distinto del Payment Processing. La pantalla debe decirlo. |
-| Un `httpClient` inyectado se salta `buildHttpClient()` | Pierde timeouts y middleware de log. Donde se use el mock, se arma con `$settings->buildHttpClient(['handler' => $mock])`. |
+| Un `httpClient` inyectado se salta `buildHttpClient()` | Pierde timeouts y middleware de log: el cliente que pasas es el cliente que se usa, composición incluida. Donde importe conservarlos, se arma con `$settings->buildHttpClient(['handler' => $mock])`. |
 
 ## Superficie de configuración
 
@@ -60,8 +61,8 @@ incompleta.
 | `logger` | — | Resuelto con `logger()`; log con PAN enmascarado |
 | `cache` | — | Resuelto con `Cache::store()`; segunda petición no descarga el CA |
 
-Los demás ajustes del SDK — `expirationTime`, `timeout`, `connectTimeout`, `rootCertificateUrl`,
-`rootCertificate`, `certKeyPassword` — **no** se exponen en `config/applepay.php`. `Settings::fromArray()`
+Los demás ajustes del SDK — `expirationTime`, `timeout`, `connectTimeout`, `certKeyPassword` — **no**
+se exponen en `config/applepay.php`. `Settings::fromArray()`
 ya los defaultea, y repetir aquí `300`, `10` y `5` no probaría que la configuración viaja: probaría
 que dos archivos dicen el mismo número. La pantalla `/config` los muestra igual, leídos de `Settings`,
 que es donde de verdad valen. El día que haga falta divergir de un default, se añade esa clave sola.
@@ -86,8 +87,12 @@ Muestra: `token()`, `expiration()`, `franchise()` y el array `additional()` comp
 
 Un `select` con los cuatro escenarios y el mismo `merchantId`. Genera el token con
 `ApplePayTokenGeneratorMock::make*($merchantId, $privateKey)` y lo descifra con una instancia de
-`ApplePay` que lleva `rootCertificate` sintético. Muestra el token generado junto al resultado, para
-que se vea qué se le está pasando al SDK.
+`ApplePay` cuyo `httpClient` responde la descarga del root CA con la raíz sintética, y sin caché.
+Muestra el token generado junto al resultado, para que se vea qué se le está pasando al SDK.
+
+El escenario *expirado* es la excepción: devuelve un token real capturado de Apple, así que necesita
+la raíz **real** para llegar a la comprobación de ventana de firma, que es lo que ese escenario
+prueba. Esa es la respuesta por defecto de `ApplePayClientMock`.
 
 Los tres escenarios de fallo deben mostrar el mensaje exacto del SDK, no uno propio:
 `Digest message does not match signed data`, `Invalid ECDSA signature`, y el de ventana de firma.
@@ -108,7 +113,7 @@ Muestra el `MerchantSession::toArray()` completo, y si faltan los certificados, 
 ### `GET /config` — Configuración efectiva
 
 Sin formulario. Construye `Settings::fromArray(config('applepay'))` y vuelca lo que resolvió:
-timeouts, URL del CA, si hay `rootCertificate` fijado, si hay caché, si el logger HTTP está activo,
+timeouts, la URL fija del CA, si hay caché, si el logger HTTP está activo,
 y el `sha256` de la llave pública derivada de `privateKey` — que es exactamente el valor contra el
 que el SDK compara `header.publicKeyHash`, así que sirve para saber de antemano si un token dado es
 para este comercio o para otro.

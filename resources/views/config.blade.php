@@ -29,8 +29,9 @@
 
         <div class="card">
             <h2>Apple Root CA</h2>
-            <p class="muted">Resuelto por la cascada: rootCertificate → caché PSR-16 → descarga. Con el caché
-                activo, recargar esta página no vuelve a salir a la red.</p>
+            <p class="muted">Resuelto por la cascada: caché PSR-16 → descarga. El certificado no se
+                configura ni se empaqueta, y la URL es fija. Con el caché activo, recargar esta
+                página no vuelve a salir a la red.</p>
             <table>
                 @foreach ($rootCertificate as $key => $value)
                     <tr><th>{{ $key }}</th><td>{{ $value }}</td></tr>

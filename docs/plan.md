@@ -79,7 +79,7 @@ public static function make(string $merchantId, array $overrides = []): array
 ```
 
 Toma `config('applepay')`, filtra los nulos, añade `logger` y `cache`, y aplica los `$overrides`
-(que es por donde entra el `rootCertificate` sintético en la pantalla de mocks, y el `httpClient`
+(que es por donde entra el `httpClient` mockeado en la pantalla de mocks, y el `httpClient`
 en la de validación).
 
 Es la única abstracción del proyecto. No hay interfaz, ni service provider, ni contenedor: es una
@@ -132,7 +132,7 @@ $token = match ($scenario) {
 `makeExpired()` no recibe argumentos: es un token real de Apple firmado en 2024. Que rompa la
 simetría del `match` es correcto, no un descuido.
 
-La instancia se arma con `ApplePayConfig::make($merchantId, ['rootCertificate' => ApplePayTokenGeneratorMock::rootCertificate()])`,
+La instancia se arma con `ApplePayConfig::make($merchantId, ['httpClient' => ApplePayClientMock::syntheticRootCertificate(), 'cache' => null])`,
 y la vista lo dice explícitamente en un aviso: sin ese override el token sintético se rechaza contra
 el root real de Apple. Es la trampa que más tiempo hace perder y se documenta en pantalla.
 
@@ -195,7 +195,7 @@ php artisan make:test MerchantValidationTest --pest --no-interaction
 Los cinco casos de la spec. La llave EC P-256 se genera en un helper de `tests/Pest.php` con
 `openssl_pkey_new(['curve_name' => 'prime256v1', 'private_key_type' => OPENSSL_KEYTYPE_EC])` y se
 inyecta con `config()->set('applepay.private_key', $pem)`. Ninguna prueba sale a la red: los
-escenarios de mock traen su propio `rootCertificate`, y la validación de comerciante usa
+escenarios de mock traen su propio cliente mockeado, y la validación de comerciante usa
 `ApplePayClientMock`.
 
 ```bash
