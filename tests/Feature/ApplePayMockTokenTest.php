@@ -2,6 +2,7 @@
 
 use App\Support\ApplePayConfig;
 use Placetopay\ApplepaySdk\ApplePay;
+use Placetopay\ApplepaySdk\Cases\ApplePayClientMock;
 use Placetopay\ApplepaySdk\Cases\ApplePayTokenGeneratorMock;
 use Placetopay\ApplepaySdk\Exceptions\DecryptionException;
 use Placetopay\ApplepaySdk\Exceptions\SignatureValidationException;
@@ -44,7 +45,7 @@ it('fails to decrypt when the merchantId differs from the one the token was mint
     $token = ApplePayTokenGeneratorMock::makeValid('merchant.com.test.app', config('applepay.private_key'));
 
     $applePay = new ApplePay(ApplePayConfig::make('merchant.com.other.app', [
-        'rootCertificate' => ApplePayTokenGeneratorMock::rootCertificate(),
+        'httpClient' => ApplePayClientMock::syntheticRootCertificate(),
     ]));
 
     expect(fn () => $applePay->decrypt(json_decode($token, true)))
@@ -57,7 +58,7 @@ it('rejects a token encrypted for a different private key', function () {
     configureApplePayWithFreshKey();
 
     $applePay = new ApplePay(ApplePayConfig::make('merchant.com.test.app', [
-        'rootCertificate' => ApplePayTokenGeneratorMock::rootCertificate(),
+        'httpClient' => ApplePayClientMock::syntheticRootCertificate(),
     ]));
 
     expect(fn () => $applePay->decrypt(json_decode($token, true)))

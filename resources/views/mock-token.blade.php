@@ -5,10 +5,11 @@
 
 @section('content')
     <div class="alert alert-warn">
-        <strong>rootCertificate no es opcional aquí.</strong> El generador firma con una cadena
-        sintética que arma en memoria, así que el SDK tiene que confiar en esa raíz. Sin ese
-        override el token se rechaza antes de llegar al descifrado. El escenario <em>expirado</em>
-        es la excepción: es un token real de Apple, y usa la raíz real.
+        <strong>El cliente mockeado no es opcional aquí.</strong> El generador firma con una cadena
+        sintética que arma en memoria, y el SDK siempre descarga su raíz por HTTP: no hay forma de
+        configurársela. Así que la única vía es responder esa descarga con la raíz sintética. El
+        escenario <em>expirado</em> es la excepción: es un token real de Apple y usa la raíz real,
+        que es justo lo que el mock devuelve por defecto.
     </div>
 
     <form method="POST" action="{{ route('mock.decrypt') }}" class="card">

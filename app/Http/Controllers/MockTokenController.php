@@ -3,10 +3,12 @@
 namespace App\Http\Controllers;
 
 use App\Support\ApplePayConfig;
+use GuzzleHttp\ClientInterface;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
 use Placetopay\ApplepaySdk\ApplePay;
+use Placetopay\ApplepaySdk\Cases\ApplePayClientMock;
 use Placetopay\ApplepaySdk\Cases\ApplePayTokenGeneratorMock;
 use Placetopay\ApplepaySdk\Exceptions\ApplepaySdkException;
 
@@ -53,7 +55,10 @@ class MockTokenController extends Controller
 
         try {
             $applePay = new ApplePay(ApplePayConfig::make($merchantId, [
-                'rootCertificate' => self::rootCertificateFor($data['scenario']),
+                'httpClient' => self::clientServing($data['scenario']),
+                // No cache with a synthetic chain: the generator builds a new one every PHP
+                // process, so a root cached by one request rejects the next request's token.
+                'cache' => null,
             ]));
 
             $brandToken = $applePay->decrypt(json_decode($token, true));
@@ -77,15 +82,15 @@ class MockTokenController extends Controller
     }
 
     /**
-     * The generator signs with a synthetic chain it builds in-process, so the SDK has to trust that
-     * chain instead of Apple's real root — otherwise the token is rejected before decryption.
-     * `makeExpired()` is the exception: it returns a real token captured from Apple, so it needs
-     * Apple's real root to reach the signing-time check that the scenario is about.
+     * The root CA is never configured: the SDK always downloads it. So the way to make it trust the
+     * generator's synthetic chain is to answer that download with the synthetic root. `makeExpired()`
+     * is the exception — it returns a real token captured from Apple, so it needs Apple's real root
+     * to reach the signing-time check the scenario is about, which is the mock's default response.
      */
-    private static function rootCertificateFor(string $scenario): string
+    private static function clientServing(string $scenario): ClientInterface
     {
         return $scenario === 'expired'
-            ? ApplePayTokenGeneratorMock::capturedRootCertificate()
-            : ApplePayTokenGeneratorMock::rootCertificate();
+            ? ApplePayClientMock::rootCertificate()
+            : ApplePayClientMock::syntheticRootCertificate();
     }
 }
