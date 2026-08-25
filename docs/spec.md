@@ -50,21 +50,21 @@ Todo lo que acepta `Settings::fromArray()` se expone en `config/applepay.php` de
 tabla es el contrato de la app; si algo aquí no se puede comprobar desde el navegador, la app está
 incompleta.
 
-| Clave del SDK | `.env` | Default | Cómo se comprueba |
-|---|---|---|---|
-| `merchantId` | `APPLEPAY_MERCHANT_ID` | — | Campo del formulario; sin él, `InvalidSettingsException` |
-| `privateKey` | `APPLEPAY_PRIVATE_KEY` | — | Descifrado correcto; con llave ajena falla el `publicKeyHash` |
-| `rootCertificate` | `APPLEPAY_ROOT_CERTIFICATE` | `''` | Pantalla de config: corta la cascada |
-| `rootCertificateUrl` | `APPLEPAY_ROOT_CERTIFICATE_URL` | URL de Apple | Log HTTP del `GET` |
-| `expirationTime` | `APPLEPAY_EXPIRATION_TIME` | `300` | Escenario `makeExpired` |
-| `timeout` | `APPLEPAY_TIMEOUT` | `10` | Pantalla de config |
-| `connectTimeout` | `APPLEPAY_CONNECT_TIMEOUT` | `5` | Pantalla de config |
-| `certPath` | `APPLEPAY_CERT_PATH` | `null` | Validación de comerciante |
-| `certKeyPath` | `APPLEPAY_CERT_KEY_PATH` | `null` | Validación de comerciante |
-| `certKeyPassword` | `APPLEPAY_CERT_KEY_PASSWORD` | `null` | Validación de comerciante |
-| `httpLogger.enabled` | `APPLEPAY_HTTP_LOGGER` | `false` | Entradas en `storage/logs/laravel.log` |
-| `logger` | — | `logger()` | Log con PAN enmascarado |
-| `cache` | — | `Cache::store()` | Segunda petición no descarga el CA |
+| Clave del SDK | `.env` | Cómo se comprueba |
+|---|---|---|
+| `merchantId` | `APPLEPAY_MERCHANT_ID` | Campo del formulario; sin él, `InvalidSettingsException` |
+| `privateKey` | `APPLEPAY_PRIVATE_KEY` | Descifrado correcto; con llave ajena falla el `publicKeyHash` |
+| `certPath` | `APPLEPAY_CERT_PATH` | Validación de comerciante en modo real |
+| `certKeyPath` | `APPLEPAY_CERT_KEY_PATH` | Validación de comerciante en modo real |
+| `httpLogger.enabled` | `APPLEPAY_HTTP_LOGGER` | Entradas en `storage/logs/laravel.log` |
+| `logger` | — | Resuelto con `logger()`; log con PAN enmascarado |
+| `cache` | — | Resuelto con `Cache::store()`; segunda petición no descarga el CA |
+
+Los demás ajustes del SDK — `expirationTime`, `timeout`, `connectTimeout`, `rootCertificateUrl`,
+`rootCertificate`, `certKeyPassword` — **no** se exponen en `config/applepay.php`. `Settings::fromArray()`
+ya los defaultea, y repetir aquí `300`, `10` y `5` no probaría que la configuración viaja: probaría
+que dos archivos dicen el mismo número. La pantalla `/config` los muestra igual, leídos de `Settings`,
+que es donde de verdad valen. El día que haga falta divergir de un default, se añade esa clave sola.
 
 La llave privada va en el `.env` en una sola línea con `\n`, y `config/applepay.php` la reconstituye
 con `str_replace('\n', "\n", ...)`, igual que en `test-google-sdk`.
