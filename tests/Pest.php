@@ -44,7 +44,21 @@ expect()->extend('toBeOne', function () {
 |
 */
 
-function something()
+/**
+ * Generates a throwaway EC P-256 key and points config/applepay.php at it, so tests never depend
+ * on a real Payment Processing key being present in the environment.
+ */
+function configureApplePayWithFreshKey(string $merchantId = 'merchant.com.test.app'): string
 {
-    // ..
+    $key = openssl_pkey_new([
+        'curve_name' => 'prime256v1',
+        'private_key_type' => OPENSSL_KEYTYPE_EC,
+    ]);
+
+    openssl_pkey_export($key, $pem);
+
+    config()->set('applepay.merchant_id', $merchantId);
+    config()->set('applepay.private_key', $pem);
+
+    return $pem;
 }
