@@ -20,6 +20,8 @@ build de frontend) y se corrige lo que allá quedó a medias.
 
 **Dentro:**
 
+0. El botón de Apple Pay y el flujo completo del navegador, hasta donde Apple lo permita sin dominio
+   verificado.
 1. Instalar el SDK desde el checkout local en `release/1.0.0` y que `composer install` funcione.
 2. Descifrar un token real de Apple pegado en un formulario.
 3. Descifrar un token sintético generado por `ApplePayTokenGeneratorMock` **con la llave del `.env`**,
@@ -28,8 +30,7 @@ build de frontend) y se corrige lo que allá quedó a medias.
 5. Una pantalla que muestre la configuración efectiva resuelta por `Settings`, enmascarada.
 6. Tests de Pest que cubran los caminos anteriores sin salir a la red.
 
-**Fuera:** frontend de Apple Pay JS, botón de pago, dominio verificado con Apple, base de datos,
-autenticación, despliegue. Nada se persiste: el token entra por POST, se procesa y se muestra.
+**Fuera:** dominio verificado con Apple, base de datos, autenticación, despliegue. Nada se persiste: el token entra por POST, se procesa y se muestra.
 
 ## Restricciones que ya se verificaron
 
@@ -109,6 +110,33 @@ que es la forma correcta de conservar timeouts y logging.
 
 Muestra el `MerchantSession::toArray()` completo, y si faltan los certificados, el mensaje de
 `missingMerchantCertificate()` con la explicación de qué certificado es el que hace falta.
+
+### `GET|POST /pay` — Botón de Apple Pay
+
+El flujo real de punta a punta, el único que produce un token genuino. `ApplePaySession` v3 en el
+navegador; `POST /pay/validate-merchant` responde a `onvalidatemerchant` abriendo la sesión con el
+Merchant Identity Certificate; `POST /pay/process` recibe `event.payment.token.paymentData` y lo
+descifra.
+
+El botón usa la apariencia nativa de Safari (`-webkit-appearance: -apple-pay-button`), no el web
+component de Apple: evita depender de un script de su CDN para dibujar un rectángulo negro.
+
+**Esta pantalla no se puede completar en local**, y la propia pantalla lo dice: arranca con un panel
+de prerrequisitos que comprueba merchantId, llave privada, certificado mTLS, si el host es público y
+si el archivo de verificación de dominio está publicado, más una fila que el JS rellena según si
+`ApplePaySession` existe y si hay tarjeta en Wallet. Los tres bloqueos reales son de Apple, no del
+código:
+
+1. **Dominio público con TLS de confianza.** Apple no verifica un `.test`, y `ApplePaySession` exige
+   HTTPS con certificado válido. Hace falta un host público — un túnel o un staging.
+2. **Verificación del dominio con Apple.** Se registra en *Merchant IDs → Merchant Domains*, se
+   descarga el archivo y se publica en `public/.well-known/apple-developer-merchantid-domain-association.txt`.
+   Apple lo descarga por internet.
+3. **Merchant Identity Certificate.** Es el que firma la sesión; sin él `onvalidatemerchant` falla.
+   No es el Payment Processing Certificate.
+
+Además hace falta Safari en macOS o iOS con una tarjeta aprovisionada en Wallet — sandbox exige una
+cuenta de Sandbox Tester y las tarjetas de prueba de Apple.
 
 ### `GET /config` — Configuración efectiva
 

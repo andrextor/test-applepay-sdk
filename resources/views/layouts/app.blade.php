@@ -36,6 +36,7 @@
         <a href="{{ route('real.show') }}" class="{{ request()->routeIs('real.*') ? 'active' : '' }}">Token real</a>
         <a href="{{ route('mock.show') }}" class="{{ request()->routeIs('mock.*') ? 'active' : '' }}">Token sintético</a>
         <a href="{{ route('merchant.show') }}" class="{{ request()->routeIs('merchant.*') ? 'active' : '' }}">Validación de comerciante</a>
+        <a href="{{ route('button.show') }}" class="{{ request()->routeIs('button.*') ? 'active' : '' }}">Botón</a>
         <a href="{{ route('config.show') }}" class="{{ request()->routeIs('config.*') ? 'active' : '' }}">Configuración</a>
     </nav>
 
