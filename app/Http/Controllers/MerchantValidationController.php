@@ -18,7 +18,7 @@ class MerchantValidationController extends Controller
     {
         return view('merchant-validation', [
             'session' => session('merchantSession'),
-            'hasCertificate' => (bool) config('applepay.cert_path') && (bool) config('applepay.cert_key_path'),
+            'hasCertificate' => (bool) config('applepay.merchant_certificate') && (bool) config('applepay.merchant_certificate_key'),
             'merchantId' => old('merchantId', config('applepay.merchant_id')),
         ]);
     }
@@ -67,7 +67,7 @@ class MerchantValidationController extends Controller
         }
 
         $settings = Settings::fromArray(ApplePayConfig::make($data['merchantId'], [
-            'certPath' => 'mock', 'certKeyPath' => 'mock',
+            'merchantCertificate' => 'mock', 'merchantCertificateKey' => 'mock',
         ]));
 
         $handler = ApplePayClientMock::new()->pushMerchantSession([
@@ -77,8 +77,8 @@ class MerchantValidationController extends Controller
         ]);
 
         return [
-            'certPath' => 'mock',
-            'certKeyPath' => 'mock',
+            'merchantCertificate' => 'mock',
+            'merchantCertificateKey' => 'mock',
             'httpClient' => $settings->buildHttpClient(['handler' => $handler]),
         ];
     }

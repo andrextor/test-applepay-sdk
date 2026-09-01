@@ -25,8 +25,8 @@ it('opens a merchant session against the mocked Apple gateway', function () {
 });
 
 it('explains that the merchant identity certificate is missing in real mode', function () {
-    config()->set('applepay.cert_path', null);
-    config()->set('applepay.cert_key_path', null);
+    config()->set('applepay.merchant_certificate', null);
+    config()->set('applepay.merchant_certificate_key', null);
 
     $this->post(route('merchant.validate'), [
         'mode' => 'real',

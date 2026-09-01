@@ -92,6 +92,13 @@
     "prefer-stable": true,
     "repositories": [
         {
+            "type": "path",
+            "url": "../applepay-sdk",
+            "options": {
+                "symlink": true
+            }
+        },
+        {
             "type": "composer",
             "url": "https://repository.placetopay.com"
         }

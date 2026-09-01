@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "251c2b7b5f53a4164064424a768d1777",
+    "content-hash": "31be0616bee3e4a2ee3a9f581656a194",
     "packages": [
         {
             "name": "brick/math",
@@ -2849,10 +2849,10 @@
         {
             "name": "placetopay/applepay-sdk",
             "version": "dev-release/1.0.0",
-            "source": {
-                "type": "git",
-                "url": "https://bitbucket.org/placetopay/applepay-sdk.git",
-                "reference": "cf79381e15a851fda0e92f5e62ed92690d2ed8da"
+            "dist": {
+                "type": "path",
+                "url": "../applepay-sdk",
+                "reference": "d875468b156d0d38eeac35b93943b979e57cdc69"
             },
             "require": {
                 "ext-json": "*",
@@ -2919,7 +2919,10 @@
                 }
             ],
             "description": "Apple Pay token signature verification and decryption SDK",
-            "time": "2026-08-24T21:12:52+00:00"
+            "transport-options": {
+                "symlink": true,
+                "relative": true
+            }
         },
         {
             "name": "placetopay/base",

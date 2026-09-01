@@ -43,21 +43,24 @@ build de frontend) y se corrige lo que allá quedó a medias.
 | El SDK no empaqueta el Apple Root CA G3: lo descarga de `apple.com` y lo cachea con el TTL del `Cache-Control` | Sin caché configurado, cada instancia de `ApplePay` sale a la red. La app debe pasar `Cache::store()` siempre, y eso mismo se vuelve algo observable en la pantalla de configuración. |
 | `ApplePayTokenGeneratorMock` firma con una cadena sintética, no con la de Apple, y el root CA **no se puede configurar**: el SDK siempre lo descarga | En la pantalla de mocks hay que responder esa descarga con la raíz sintética: `httpClient: ApplePayClientMock::syntheticRootCertificate()`. Sin eso el token se rechaza antes de descifrarse. Es la trampa nº1 del SDK y la app tiene que dejarla evidente, no esconderla. |
 | La cadena sintética se regenera **en cada proceso PHP**, pero un root cacheado sobrevive entre peticiones | La pantalla de mocks corre con `cache: null`. Si no, la raíz que cachea una petición rechaza el token de la siguiente con `Intermediate CA certificate is not signed by the Apple Root CA`. En una suite de tests no se ve, porque todo corre en un proceso. |
-| `validateMerchant()` lanza `InvalidSettingsException::missingMerchantCertificate()` si faltan `certPath`/`certKeyPath` | Esa ruta necesita el Merchant Identity Certificate, que es distinto del Payment Processing. La pantalla debe decirlo. |
+| `validateMerchant()` lanza `InvalidSettingsException::missingMerchantCertificate()` si faltan `merchantCertificate`/`merchantCertificateKey` | Esa ruta necesita el Merchant Identity Certificate, que es distinto del Payment Processing. La pantalla debe decirlo. |
 | Un `httpClient` inyectado se salta `buildHttpClient()` | Pierde timeouts y middleware de log: el cliente que pasas es el cliente que se usa, composición incluida. Donde importe conservarlos, se arma con `$settings->buildHttpClient(['handler' => $mock])`. |
 
 ## Superficie de configuración
 
-Todo lo que acepta `Settings::fromArray()` se expone en `config/applepay.php` desde el `.env`. Esta
+Todo lo que acepta `Settings::fromArray()` se expone en `config/applepay.php`. Las credenciales van
+ahí como contenido PEM pegado (son las de prueba de `merchant.com.placetopay.checkout-test`,
+generadas en `~/Downloads/apple-pay-certs`); el SDK recibe strings, nunca rutas de archivo. Esta
 tabla es el contrato de la app; si algo aquí no se puede comprobar desde el navegador, la app está
 incompleta.
 
-| Clave del SDK | `.env` | Cómo se comprueba |
+| Clave del SDK | `config/applepay.php` | Cómo se comprueba |
 |---|---|---|
-| `merchantId` | `APPLEPAY_MERCHANT_ID` | Campo del formulario; sin él, `InvalidSettingsException` |
-| `privateKey` | `APPLEPAY_PRIVATE_KEY` | Descifrado correcto; con llave ajena falla el `publicKeyHash` |
-| `certPath` | `APPLEPAY_CERT_PATH` | Validación de comerciante en modo real |
-| `certKeyPath` | `APPLEPAY_CERT_KEY_PATH` | Validación de comerciante en modo real |
+| `merchantId` | `merchant_id` | Campo del formulario; sin él, `InvalidSettingsException` |
+| — (`domainName` de la petición) | `domain_name` | Dominio registrado en el portal de Apple (`checkout-test.placetopay.com`); valor por defecto del formulario de validación. Su archivo de verificación vive en `public/.well-known/` |
+| `privateKey` | `private_key` | Descifrado correcto; con llave ajena falla el `publicKeyHash` |
+| `merchantCertificate` | `merchant_certificate` | Validación de comerciante en modo real |
+| `merchantCertificateKey` | `merchant_certificate_key` | Validación de comerciante en modo real |
 | `httpLogger.enabled` | `APPLEPAY_HTTP_LOGGER` | Entradas en `storage/logs/laravel.log` |
 | `logger` | — | Resuelto con `logger()`; log con PAN enmascarado |
 | `cache` | — | Resuelto con `Cache::store()`; segunda petición no descarga el CA |

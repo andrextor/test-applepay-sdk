@@ -37,8 +37,10 @@ class ConfigController extends Controller
                 'cache' => $settings->cache ? $settings->cache::class : 'sin caché — descarga el CA en cada instancia',
                 'logger' => $settings->logger ? $settings->logger::class : 'sin logger',
                 'httpLogger' => ($settings->httpLogger['enabled'] ?? false) ? 'activo' : 'inactivo',
-                'certPath' => $settings->certPath ?? 'no configurado — validateMerchant() fallará',
-                'certKeyPath' => $settings->certKeyPath ?? 'no configurado',
+                'merchantCertificate' => $settings->merchantCertificate
+                    ? $this->summarizeCertificate($settings->merchantCertificate)
+                    : 'no configurado — validateMerchant() fallará',
+                'merchantCertificateKey' => $settings->merchantCertificateKey ? 'configurada' : 'no configurada',
                 'httpClient' => $settings->httpClient::class,
             ],
             'privateKey' => $this->describePrivateKey($settings->privateKey),
@@ -69,6 +71,15 @@ class ConfigController extends Controller
         } catch (Throwable $exception) {
             return ['error' => $exception->getMessage()];
         }
+    }
+
+    private function summarizeCertificate(string $pem): string
+    {
+        $parsed = openssl_x509_parse($pem);
+
+        return $parsed === false
+            ? 'no es un certificado PEM válido'
+            : ($parsed['subject']['CN'] ?? '?').' · válido hasta '.date('Y-m-d', $parsed['validTo_time_t'] ?? 0);
     }
 
     /**

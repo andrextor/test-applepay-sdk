@@ -1,0 +1,11 @@
+{
+  "mcpServers": {
+    "laravel-boost": {
+      "command": "/Users/ivanlopez/Library/Application Support/Herd/bin/php85",
+      "args": [
+        "/Users/ivanlopez/Projects/test-applepay-sdk/artisan",
+        "boost:mcp"
+      ]
+    }
+  }
+}

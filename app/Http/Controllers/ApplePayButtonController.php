@@ -19,7 +19,7 @@ class ApplePayButtonController extends Controller
         return view('apple-pay-button', [
             'merchantId' => (string) config('applepay.merchant_id'),
             'domainName' => $request->getHost(),
-            'displayName' => config('app.name'),
+            'displayName' => config('applepay.display_name'),
             'checks' => $this->prerequisites($request),
         ]);
     }
@@ -41,7 +41,7 @@ class ApplePayButtonController extends Controller
             $session = $applePay->validateMerchant(MerchantValidationRequest::fromArray([
                 'validationUrl' => $data['validationURL'],
                 'domainName' => $request->getHost(),
-                'displayName' => (string) config('app.name'),
+                'displayName' => (string) config('applepay.display_name'),
             ]));
 
             return response()->json($session->toArray());
@@ -94,17 +94,17 @@ class ApplePayButtonController extends Controller
             [
                 'label' => 'merchantId configurado',
                 'ok' => config('applepay.merchant_id') !== '',
-                'detail' => 'APPLEPAY_MERCHANT_ID en el .env',
+                'detail' => 'merchant_id en config/applepay.php',
             ],
             [
                 'label' => 'Payment Processing private key configurada',
                 'ok' => config('applepay.private_key') !== '',
-                'detail' => 'APPLEPAY_PRIVATE_KEY — descifra el token',
+                'detail' => 'private_key en config/applepay.php — descifra el token',
             ],
             [
                 'label' => 'Merchant Identity Certificate configurado',
-                'ok' => (bool) config('applepay.cert_path') && (bool) config('applepay.cert_key_path'),
-                'detail' => 'APPLEPAY_CERT_PATH y APPLEPAY_CERT_KEY_PATH — sin esto falla onvalidatemerchant',
+                'ok' => (bool) config('applepay.merchant_certificate') && (bool) config('applepay.merchant_certificate_key'),
+                'detail' => 'merchant_certificate y merchant_certificate_key en config/applepay.php — sin esto falla onvalidatemerchant',
             ],
             [
                 'label' => 'Dominio público',

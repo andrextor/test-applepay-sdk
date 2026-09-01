@@ -23,13 +23,13 @@
     <div class="card">
         <h2>Pago</h2>
         <label for="amount">Importe</label>
-        <input id="amount" value="1.00">
+        <input id="amount" value="500">
 
         <label for="currency">Moneda</label>
-        <input id="currency" value="USD">
+        <input id="currency" value="COP">
 
         <label for="country">País del comercio</label>
-        <input id="country" value="US">
+        <input id="country" value="CO">
 
         <div id="apple-pay-button-container" style="margin-top:20px"></div>
         <p class="muted" id="status"></p>
@@ -99,6 +99,8 @@
             status.textContent = '';
             document.getElementById('result-card').style.display = 'none';
 
+            let failed = false;
+
             const session = new ApplePaySession(3, {
                 countryCode: document.getElementById('country').value,
                 currencyCode: document.getElementById('currency').value,
@@ -112,8 +114,9 @@
                 post('{{ route('button.validate') }}', {validationURL: event.validationURL})
                     .then((merchantSession) => session.completeMerchantValidation(merchantSession))
                     .catch((error) => {
-                        session.abort();
+                        failed = true;
                         status.textContent = 'Falló la validación de comerciante — ' + error.message;
+                        session.abort();
                     });
             };
 
@@ -132,7 +135,7 @@
                     });
             };
 
-            session.oncancel = () => { status.textContent = 'Cancelado por el usuario.'; };
+            session.oncancel = () => { if (! failed) status.textContent = 'Cancelado por el usuario.'; };
 
             session.begin();
         }

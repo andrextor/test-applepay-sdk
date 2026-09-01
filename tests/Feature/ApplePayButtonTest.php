@@ -16,8 +16,8 @@ it('reports which prerequisites are still missing', function () {
 });
 
 it('refuses merchant validation without the merchant identity certificate', function () {
-    config()->set('applepay.cert_path', null);
-    config()->set('applepay.cert_key_path', null);
+    config()->set('applepay.merchant_certificate', null);
+    config()->set('applepay.merchant_certificate_key', null);
 
     $this->postJson(route('button.validate'), [
         'validationURL' => 'https://apple-pay-gateway.apple.com/paymentservices/paymentSession',

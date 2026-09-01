@@ -22,8 +22,8 @@ class ApplePayConfig
         $settings = [
             'merchantId' => $merchantId,
             'privateKey' => (string) config('applepay.private_key'),
-            'certPath' => config('applepay.cert_path'),
-            'certKeyPath' => config('applepay.cert_key_path'),
+            'merchantCertificate' => config('applepay.merchant_certificate'),
+            'merchantCertificateKey' => config('applepay.merchant_certificate_key'),
             'httpLogger' => ['enabled' => (bool) config('applepay.http_logger')],
             'logger' => logger(),
             'cache' => Cache::store(),

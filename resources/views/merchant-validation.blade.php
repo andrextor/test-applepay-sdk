@@ -6,7 +6,7 @@
 @section('content')
     @unless ($hasCertificate)
         <div class="alert alert-warn">
-            No hay <code>APPLEPAY_CERT_PATH</code> / <code>APPLEPAY_CERT_KEY_PATH</code> en el .env,
+            No hay <code>merchant_certificate</code> / <code>merchant_certificate_key</code> en <code>config/applepay.php</code>,
             así que el modo real fallará con <code>missingMerchantCertificate</code>. Ese certificado
             es el <strong>Merchant Identity Certificate</strong> (RSA), distinto del Payment
             Processing Certificate que usa el descifrado. El modo mock funciona sin él.
@@ -28,10 +28,10 @@
         <input id="validationUrl" name="validationUrl" value="{{ old('validationUrl', 'https://apple-pay-gateway.apple.com/paymentservices/paymentSession') }}">
 
         <label for="domainName">domainName</label>
-        <input id="domainName" name="domainName" value="{{ old('domainName') }}" placeholder="checkout.yourcompany.com">
+        <input id="domainName" name="domainName" value="{{ old('domainName', config('applepay.domain_name')) }}" placeholder="checkout.yourcompany.com">
 
         <label for="displayName">displayName</label>
-        <input id="displayName" name="displayName" value="{{ old('displayName') }}" placeholder="Your Company">
+        <input id="displayName" name="displayName" value="{{ old('displayName', config('applepay.display_name')) }}" placeholder="Your Company">
 
         <button type="submit">Validar</button>
     </form>
