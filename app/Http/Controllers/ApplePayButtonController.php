@@ -38,11 +38,11 @@ class ApplePayButtonController extends Controller
         try {
             $applePay = new ApplePay(ApplePayConfig::make((string) config('applepay.merchant_id')));
 
-            $session = $applePay->validateMerchant(MerchantValidationRequest::fromArray([
-                'validationUrl' => $data['validationURL'],
-                'domainName' => $request->getHost(),
-                'displayName' => (string) config('applepay.display_name'),
-            ]));
+            $session = $applePay->validateMerchant(new MerchantValidationRequest(
+                validationUrl: $data['validationURL'],
+                initiativeContext: $request->getHost(),
+                displayName: (string) config('applepay.display_name'),
+            ));
 
             return response()->json($session->toArray());
         } catch (ApplepaySdkException $exception) {
@@ -98,13 +98,13 @@ class ApplePayButtonController extends Controller
             ],
             [
                 'label' => 'Payment Processing private key configurada',
-                'ok' => config('applepay.private_key') !== '',
-                'detail' => 'private_key en config/applepay.php — descifra el token',
+                'ok' => (bool) config('applepay.payment_processing_private_key'),
+                'detail' => 'payment_processing_private_key en config/applepay.php — descifra el token',
             ],
             [
                 'label' => 'Merchant Identity Certificate configurado',
-                'ok' => (bool) config('applepay.merchant_certificate') && (bool) config('applepay.merchant_certificate_key'),
-                'detail' => 'merchant_certificate y merchant_certificate_key en config/applepay.php — sin esto falla onvalidatemerchant',
+                'ok' => (bool) config('applepay.merchant_identity_cert') && (bool) config('applepay.merchant_identity_private_key'),
+                'detail' => 'merchant_identity_cert y merchant_identity_private_key en config/applepay.php — sin esto falla onvalidatemerchant',
             ],
             [
                 'label' => 'Dominio público',

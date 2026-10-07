@@ -58,7 +58,7 @@ function configureApplePayWithFreshKey(string $merchantId = 'merchant.com.test.a
     openssl_pkey_export($key, $pem);
 
     config()->set('applepay.merchant_id', $merchantId);
-    config()->set('applepay.private_key', $pem);
+    config()->set('applepay.payment_processing_private_key', $pem);
 
     return $pem;
 }

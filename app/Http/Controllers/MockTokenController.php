@@ -43,7 +43,7 @@ class MockTokenController extends Controller
         $request->flash();
 
         $merchantId = $data['merchantId'];
-        $privateKey = (string) config('applepay.private_key');
+        $privateKey = (string) config('applepay.payment_processing_private_key');
         $overwrites = json_decode($data['overwrites'] ?? '', true) ?: [];
 
         $token = match ($data['scenario']) {

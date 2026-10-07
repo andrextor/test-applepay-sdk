@@ -42,7 +42,7 @@ it('fails to decrypt when the merchantId differs from the one the token was mint
     // The merchantId is the shared info of the ANSI X9.63 KDF, so a different one derives a
     // different AES key and GCM authentication fails. This is what proves the setting travels
     // all the way into the key agreement, not just into the constructor.
-    $token = ApplePayTokenGeneratorMock::makeValid('merchant.com.test.app', config('applepay.private_key'));
+    $token = ApplePayTokenGeneratorMock::makeValid('merchant.com.test.app', config('applepay.payment_processing_private_key'));
 
     $applePay = new ApplePay(ApplePayConfig::make('merchant.com.other.app', [
         'httpClient' => ApplePayClientMock::syntheticRootCertificate(),
@@ -53,7 +53,7 @@ it('fails to decrypt when the merchantId differs from the one the token was mint
 });
 
 it('rejects a token encrypted for a different private key', function () {
-    $token = ApplePayTokenGeneratorMock::makeValid('merchant.com.test.app', config('applepay.private_key'));
+    $token = ApplePayTokenGeneratorMock::makeValid('merchant.com.test.app', config('applepay.payment_processing_private_key'));
 
     configureApplePayWithFreshKey();
 

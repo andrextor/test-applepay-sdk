@@ -6,8 +6,8 @@
 @section('content')
     @unless ($hasCertificate)
         <div class="alert alert-warn">
-            No hay <code>merchant_certificate</code> / <code>merchant_certificate_key</code> en <code>config/applepay.php</code>,
-            así que el modo real fallará con <code>missingMerchantCertificate</code>. Ese certificado
+            No hay <code>merchant_identity_cert</code> / <code>merchant_identity_private_key</code> en <code>config/applepay.php</code>,
+            así que el modo real fallará con <code>InvalidSettingsException</code>. Ese certificado
             es el <strong>Merchant Identity Certificate</strong> (RSA), distinto del Payment
             Processing Certificate que usa el descifrado. El modo mock funciona sin él.
         </div>

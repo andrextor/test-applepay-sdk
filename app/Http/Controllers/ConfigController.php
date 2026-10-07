@@ -37,13 +37,12 @@ class ConfigController extends Controller
                 'cache' => $settings->cache ? $settings->cache::class : 'sin caché — descarga el CA en cada instancia',
                 'logger' => $settings->logger ? $settings->logger::class : 'sin logger',
                 'httpLogger' => ($settings->httpLogger['enabled'] ?? false) ? 'activo' : 'inactivo',
-                'merchantCertificate' => $settings->merchantCertificate
-                    ? $this->summarizeCertificate($settings->merchantCertificate)
-                    : 'no configurado — validateMerchant() fallará',
-                'merchantCertificateKey' => $settings->merchantCertificateKey ? 'configurada' : 'no configurada',
+                'merchantIdentityCertPath' => $settings->merchantIdentityCertPath.' · '
+                    .$this->summarizeCertificate((string) file_get_contents($settings->merchantIdentityCertPath)),
+                'merchantIdentityPrivateKeyPath' => $settings->merchantIdentityPrivateKeyPath,
                 'httpClient' => $settings->httpClient::class,
             ],
-            'privateKey' => $this->describePrivateKey($settings->privateKey),
+            'privateKey' => $this->describePrivateKey($settings->paymentProcessingPrivateKey),
             'rootCertificate' => $this->describeRootCertificate($settings),
         ]);
     }

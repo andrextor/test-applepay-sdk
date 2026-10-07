@@ -16,8 +16,8 @@ it('reports which prerequisites are still missing', function () {
 });
 
 it('refuses merchant validation without the merchant identity certificate', function () {
-    config()->set('applepay.merchant_certificate', null);
-    config()->set('applepay.merchant_certificate_key', null);
+    config()->set('applepay.merchant_identity_cert', null);
+    config()->set('applepay.merchant_identity_private_key', null);
 
     $this->postJson(route('button.validate'), [
         'validationURL' => 'https://apple-pay-gateway.apple.com/paymentservices/paymentSession',
@@ -33,7 +33,7 @@ it('decrypts the token the device would post', function () {
 
     $token = ApplePayTokenGeneratorMock::makeValid(
         'merchant.com.test.app',
-        config('applepay.private_key'),
+        config('applepay.payment_processing_private_key'),
         ['applicationPrimaryAccountNumber' => '4111111111111111'],
     );
 
@@ -48,7 +48,7 @@ it('decrypts the token the device would post', function () {
 it('reports a decryption failure back to the page', function () {
     Cache::store()->put('apple_pay_root_certificate', ApplePayTokenGeneratorMock::rootCertificate(), 60);
 
-    $token = ApplePayTokenGeneratorMock::makeTampered('merchant.com.test.app', config('applepay.private_key'));
+    $token = ApplePayTokenGeneratorMock::makeTampered('merchant.com.test.app', config('applepay.payment_processing_private_key'));
 
     $this->postJson(route('button.process'), ['token' => json_decode($token, true)])
         ->assertStatus(422)

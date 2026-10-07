@@ -18,7 +18,7 @@ class MerchantValidationController extends Controller
     {
         return view('merchant-validation', [
             'session' => session('merchantSession'),
-            'hasCertificate' => (bool) config('applepay.merchant_certificate') && (bool) config('applepay.merchant_certificate_key'),
+            'hasCertificate' => (bool) config('applepay.merchant_identity_cert') && (bool) config('applepay.merchant_identity_private_key'),
             'merchantId' => old('merchantId', config('applepay.merchant_id')),
         ]);
     }
@@ -38,7 +38,11 @@ class MerchantValidationController extends Controller
         try {
             $applePay = new ApplePay(ApplePayConfig::make($data['merchantId'], $this->overridesFor($data)));
 
-            $session = $applePay->validateMerchant(MerchantValidationRequest::fromArray($data));
+            $session = $applePay->validateMerchant(new MerchantValidationRequest(
+                validationUrl: $data['validationUrl'],
+                initiativeContext: $data['domainName'],
+                displayName: $data['displayName'],
+            ));
 
             return redirect()->route('merchant.show')->with([
                 'success' => true,
@@ -66,9 +70,11 @@ class MerchantValidationController extends Controller
             return [];
         }
 
-        $settings = Settings::fromArray(ApplePayConfig::make($data['merchantId'], [
-            'merchantCertificate' => 'mock', 'merchantCertificateKey' => 'mock',
-        ]));
+        // The SDK only checks the pair is readable; the mocked handler never does the mTLS handshake.
+        $mockPem = ApplePayConfig::pemFile('mock', 'mock.pem');
+        $identity = ['merchantIdentityCertPath' => $mockPem, 'merchantIdentityPrivateKeyPath' => $mockPem];
+
+        $settings = Settings::fromArray(ApplePayConfig::make($data['merchantId'], $identity));
 
         $handler = ApplePayClientMock::new()->pushMerchantSession([
             'merchantIdentifier' => $data['merchantId'],
@@ -77,8 +83,7 @@ class MerchantValidationController extends Controller
         ]);
 
         return [
-            'merchantCertificate' => 'mock',
-            'merchantCertificateKey' => 'mock',
+            ...$identity,
             'httpClient' => $settings->buildHttpClient(['handler' => $handler]),
         ];
     }
